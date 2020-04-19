@@ -6,6 +6,9 @@
 #'     different database identifier
 #'
 #' @param context `character`
+#' @param input_item `character`
+#' @param input_value `character`
+#' @param output_item `character`
 #'
 #' @return `data.frame`
 #'
@@ -17,6 +20,11 @@
 #' @export
 #'
 #' @examples
+#'
+#' lipidMapsMapping(context = "compound",
+#' input_item = "inchi_key",
+#' input_value = "WTJKGGKOPKCXLL-VYOBOKEXSA-N",
+#' output_item = "all")
 lipidMapsMapping <- function(context = c("compound", "gene", "protein"),
                              input_item,
                              input_value,
@@ -25,7 +33,7 @@ lipidMapsMapping <- function(context = c("compound", "gene", "protein"),
   # check input
   match.arg(context)
 
-  # dependen on the context, input_item can have different values
+  # dependent on the context, input_item can have different values
   if(context == "compound") {
 
     match.arg(input_item, c("lm_id", "formula", "inchi_key", "pubchem_cid",
@@ -42,8 +50,42 @@ lipidMapsMapping <- function(context = c("compound", "gene", "protein"),
 
   }
 
+  # dependent on the context, output_item can have different values
+  if(context == "compound") {
 
-  query_url <- paste0(BASE_URL, "mapping?from=", from, "&to=", to, "&ids=", paste(ids, collapse = ","))
+    match.arg(output_item, c("all", "classification", "lm_id", "name",
+                             "sys_name", "synonyms", "core", "main_class",
+                             "sub_class", "class_level4", "exactmass",
+                             "formula", "inchi", "inchi_key", "kegg_id",
+                             "hmdb_id", "chebi_id", "lipidbank_id",
+                             "pubchem_cid", "smiles", "molfile", "structure",
+                             "physchem"))
+
+  } else if(context == "gene") {
+
+    match.arg(output_item, c())
+
+  } else if(context == "protein") {
+
+    match.arg(output_item, c())
+
+  }
+
+    lapply(input_value, .query,
+           context = context,
+           input_item = input_item,
+           output_item = output_item)
+
+
+}
+
+.query <- function(context, input_item, input_value, output_item) {
+
+  query_url <- paste0(BASE_URL,
+                      "/", context,
+                      "/", input_item,
+                      "/", input_value,
+                      "/", output_item)
 
   jsonlite::fromJSON(utils::URLencode(query_url))
 
