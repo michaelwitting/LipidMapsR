@@ -71,22 +71,35 @@ lipidMapsMapping <- function(context = c("compound", "gene", "protein"),
 
   }
 
-    lapply(input_value, .query,
-           context = context,
-           input_item = input_item,
-           output_item = output_item)
+  lapply(input_value, .query,
+         context = context,
+         input_item = input_item,
+         output_item = output_item)
 
 
 }
 
 .query <- function(context, input_item, input_value, output_item) {
 
+  # create query url
   query_url <- paste0(BASE_URL,
                       "/", context,
                       "/", input_item,
                       "/", input_value,
                       "/", output_item)
 
-  jsonlite::fromJSON(utils::URLencode(query_url))
+  # perform request
+  r <- curl::curl_fetch_memory(URLencode(query_url))
+
+  # dependent on status code return results
+  if(r$status_code == as.integer(200)) {
+
+    return(jsonlite::fromJSON(rawToChar(r$content), flatten = TRUE))
+
+  } else {
+
+    return(NA_character_)
+
+  }
 
 }
